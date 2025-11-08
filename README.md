@@ -37,7 +37,7 @@ The backend dev server is configured with CORS to only accept connections from "
 
 Then visit https://hubs.local:8080 (note: HTTPS is required, you'll need to accept the warning for the self-signed SSL certificate)
 
-> Note: When running the Hubs client locally, you will still connect to the development versions of the [reticulum](https://github.com/Hubs-Foundation/reticulum) server. This server does not allow being accessed outside of localhost. If you want to host your own Hubs servers, please check out [Hubs Community Edition](https://github.com/Hubs-Foundation/hubs-cloud/tree/master/community-edition).
+> Note: When running the Hubs client locally, you will still connect to the development versions of the [reticulum](https://github.com/Hubs-Foundation/reticulum) server. This server does not allow being accessed outside of localhost. If you want to host your own Hubs servers, please check out [Hubs Community Edition](https://github.com/Hubs-Foundation/hubs-cloud/tree/master/community-edition). To run entirely offline with your own backend, follow the steps in [Running Hubs against a local Reticulum](./doc/local-reticulum.md).
 
 ## Contributing
 

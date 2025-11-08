@@ -14,6 +14,34 @@ import { fetchRandomDefaultAvatarId, generateRandomName } from "../utils/identit
 import { NO_DEVICE_ID } from "../utils/media-devices-utils.js";
 import { AAModes } from "../constants";
 
+function createStorage() {
+  try {
+    const testKey = "___hubs_test";
+    window.localStorage.setItem(testKey, "1");
+    window.localStorage.removeItem(testKey);
+    return window.localStorage;
+  } catch (error) {
+    console.warn("localStorage is not available, falling back to in-memory storage", error);
+    const memoryStore = {};
+    return {
+      getItem(key) {
+        if (!Object.prototype.hasOwnProperty.call(memoryStore, key)) {
+          return null;
+        }
+        return memoryStore[key];
+      },
+      setItem(key, value) {
+        memoryStore[key] = value;
+      },
+      removeItem(key) {
+        delete memoryStore[key];
+      }
+    };
+  }
+}
+
+const storage = createStorage();
+
 const defaultMaterialQuality = (function () {
   const MATERIAL_QUALITY_OPTIONS = ["low", "medium", "high"];
 
@@ -251,16 +279,18 @@ export default class Store extends EventTarget {
 
     this._preferences = {};
 
-    if (localStorage.getItem(LOCAL_STORE_KEY) === null) {
-      localStorage.setItem(LOCAL_STORE_KEY, JSON.stringify({}));
+    if (storage.getItem(LOCAL_STORE_KEY) === null) {
+      storage.setItem(LOCAL_STORE_KEY, JSON.stringify({}));
     }
 
     // When storage is updated in another window
-    window.addEventListener("storage", e => {
-      if (e.key !== LOCAL_STORE_KEY) return;
-      delete this[STORE_STATE_CACHE_KEY];
-      this.dispatchEvent(new CustomEvent("statechanged"));
-    });
+    if (storage === window.localStorage) {
+      window.addEventListener("storage", e => {
+        if (e.key !== LOCAL_STORE_KEY) return;
+        delete this[STORE_STATE_CACHE_KEY];
+        this.dispatchEvent(new CustomEvent("statechanged"));
+      });
+    }
 
     this.update({
       activity: {},
@@ -333,7 +363,7 @@ export default class Store extends EventTarget {
 
   get state() {
     if (!Object.prototype.hasOwnProperty.call(this, STORE_STATE_CACHE_KEY)) {
-      const state = (this[STORE_STATE_CACHE_KEY] = JSON.parse(localStorage.getItem(LOCAL_STORE_KEY)));
+      const state = (this[STORE_STATE_CACHE_KEY] = JSON.parse(storage.getItem(LOCAL_STORE_KEY)));
       if (!state.preferences) state.preferences = {};
       this._preferences = { ...state.preferences }; // cache prefs without injected defaults
       // inject default values
@@ -429,7 +459,7 @@ export default class Store extends EventTarget {
       this._preferences = finalState.preferences;
     }
 
-    localStorage.setItem(LOCAL_STORE_KEY, JSON.stringify(finalState));
+    storage.setItem(LOCAL_STORE_KEY, JSON.stringify(finalState));
     delete this[STORE_STATE_CACHE_KEY];
 
     if (newState.profile !== undefined) {
